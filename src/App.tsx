@@ -10,111 +10,91 @@
 
 import React from 'react';
 import {
-  SafeAreaView,
-  StyleSheet,
-  ScrollView,
   View,
-  Text,
-  StatusBar,
+  Modal,
+  ActivityIndicator,
+  StyleSheet,
 } from 'react-native';
+import { useSelector } from 'react-redux';
 
-import {
-  Header,
-  LearnMoreLinks,
-  Colors,
-  DebugInstructions,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+// import react navigations
+import 'react-native-gesture-handler';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+// import navigation routes
+import { StackRoutes } from './router';
 
-declare const global: {HermesInternal: null | {}};
+// import localstorage
+// import Storage from './utils/storage/index';
 
-const App = () => (
-  <>
-    <StatusBar barStyle="dark-content" />
-    <SafeAreaView>
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={styles.scrollView}
-      >
-        <Header />
-        {global.HermesInternal == null ? null : (
-          <View style={styles.engine}>
-            <Text style={styles.footer}>Engine: Hermes</Text>
+const Stack = createStackNavigator();
+
+const App = () => {
+  // configure redux
+  const Token:string = useSelector((state:any) => state.auth.auth.key.token);
+  const IsLoading: boolean = useSelector((state: any) => state.loading.isLoading);
+  console.log('Isloading : ', IsLoading);
+  console.log('token: ', Token);
+  function renderLoginRoutes() {
+    return (
+      <NavigationContainer>
+        <Modal transparent animationType="fade" visible={IsLoading}>
+          <View style={styles.modalContainer}>
+            <ActivityIndicator size="large" />
           </View>
-        )}
-        <View style={styles.body}>
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Step One</Text>
-            <Text style={styles.sectionDescription}>
-              Edit
-              {' '}
-              <Text style={styles.highlight}>App.tsx</Text>
-              {' '}
-              to change this
-              screen and then come back to see your edits.
-            </Text>
+        </Modal>
+        <Stack.Navigator>
+          {
+            StackRoutes.public.map((data) => (
+              <Stack.Screen
+                key={data.id}
+                name={data.name}
+                component={data.component}
+                options={data.options}
+              />
+            ))
+          }
+        </Stack.Navigator>
+      </NavigationContainer>
+    );
+  }
+
+  function renderLogedinRoutes() {
+    return (
+      <NavigationContainer>
+        <Modal transparent animationType="fade" visible={IsLoading}>
+          <View style={styles.modalContainer}>
+            <ActivityIndicator size="large" />
           </View>
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>See Your Changes</Text>
-            <Text style={styles.sectionDescription}>
-              <ReloadInstructions />
-            </Text>
-          </View>
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Debug</Text>
-            <Text style={styles.sectionDescription}>
-              <DebugInstructions />
-            </Text>
-          </View>
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Learn More</Text>
-            <Text style={styles.sectionDescription}>
-              Read the docs to discover what to do next:
-            </Text>
-          </View>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  </>
-);
+        </Modal>
+        <Stack.Navigator
+          initialRouteName="Dashboard"
+        >
+          {
+            StackRoutes.private.map((data) => (
+              <Stack.Screen
+                key={data.id}
+                name={data.name}
+                component={data.component}
+                options={data.options}
+              />
+            ))
+          }
+        </Stack.Navigator>
+      </NavigationContainer>
+    );
+  }
+
+  return Token.length > 0 ? renderLogedinRoutes() : renderLoginRoutes();
+};
 
 const styles = StyleSheet.create({
-  body: {
-    backgroundColor: Colors.white,
-  },
-  engine: {
-    position: 'absolute',
-    right: 0,
-  },
-  footer: {
-    color: Colors.dark,
-    fontSize: 12,
-    fontWeight: '600',
-    padding: 4,
-    paddingRight: 12,
-    textAlign: 'right',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-  scrollView: {
-    backgroundColor: Colors.lighter,
-  },
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionDescription: {
-    color: Colors.dark,
-    fontSize: 18,
-    fontWeight: '400',
-    marginTop: 8,
-  },
-  sectionTitle: {
-    color: Colors.black,
-    fontSize: 24,
-    fontWeight: '600',
+  // eslint-disable-next-line react-native/no-color-literals
+  modalContainer: {
+    alignContent: 'center',
+    backgroundColor: 'rgba(52, 52, 52, 0.2)',
+    flex: 1,
+    justifyContent: 'center',
   },
 });
 
