@@ -54,8 +54,8 @@ export const ResponseInterceptor:InterceptorDTO = {
                             ...globState,
                             auth: JSON.stringify(auth),
                         }));
-                        subscribers = [];
                         onRrefreshed(res.data.token);
+                        subscribers = [];
                     });
                 }
                 return new Promise((resolve) => {
