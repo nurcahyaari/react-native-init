@@ -42,12 +42,6 @@ export const ResponseInterceptor:InterceptorDTO = {
         // check if error response code is 401 <Unautorization> it will refreshing the token
         if (status === 401) {
             if (refreshToken !== null) {
-                const requestSubscribers = new Promise((resolve) => {
-                    subscribeTokenRefresh((token:any) => {
-                      originalRequest.headers.Authorization = `Bearer ${token}`;
-                      resolve(Axios(originalRequest));
-                    });
-                });
                 if (!isRefreshing) {
                     isRefreshing = true;
                     GenerateRefreshToken(refreshToken)
@@ -64,7 +58,12 @@ export const ResponseInterceptor:InterceptorDTO = {
                         onRrefreshed(res.data.token);
                     });
                 }
-                return requestSubscribers;
+                return new Promise((resolve) => {
+                    subscribeTokenRefresh((token:any) => {
+                      originalRequest.headers.Authorization = `Bearer ${token}`;
+                      resolve(Axios(originalRequest));
+                    });
+                });
             }
         }
         return Promise.reject(error);
