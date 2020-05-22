@@ -1,5 +1,6 @@
 // eslint-disable-next-line no-unused-vars
 import Axios, { AxiosRequestConfig } from 'axios';
+import { KEY_PREFIX } from 'redux-persist';
 import Storage from '../storage/index';
 import GenerateRefreshToken from './refreshtoken';
 
@@ -9,26 +10,71 @@ export interface InterceptorDTO {
 }
 
 export const RequestInterceptor:InterceptorDTO = {
-    Handler: (config:AxiosRequestConfig) => config,
+    Handler: async (config:AxiosRequestConfig) => {
+        const state = JSON.parse(await Storage.GetItems(`${KEY_PREFIX}root`));
+        const { auth } = JSON.parse(state).auth;
+        const { token } = auth.key;
+        const newConfig = {
+            ...config,
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        };
+        return newConfig;
+    },
     ErrorHandler: (error:any) => Promise.reject(error),
 };
+
+let isRefreshing = false;
+
+let subscribers:any[] = [];
 
 export const ResponseInterceptor:InterceptorDTO = {
     Handler: (response:any) => response,
     ErrorHandler: async (error:any):Promise<any> => {
-        const { response: errorResponse } = error;
-        const refreshToken = await Storage.GetItems('refresh_token');
+        const { config, response: { status } } = error;
+        const originalRequest = config;
+
+        const globState = JSON.parse(await Storage.GetItems(`${KEY_PREFIX}root`));
+        const { auth } = JSON.parse(globState).auth;
+        const { refreshToken } = auth.key;
 
         // check if error response code is 401 <Unautorization> it will refreshing the token
-        if (errorResponse.status === 401) {
+        if (status === 401) {
             if (refreshToken !== null) {
-                const newToken = await GenerateRefreshToken(refreshToken);
-                await Storage.SetItems('token', newToken.data.token);
-                await Storage.SetItems('refresh_token', newToken.data.refresh_token);
-                const response = await Axios(errorResponse.config);
-                return response;
+                const requestSubscribers = new Promise((resolve) => {
+                    subscribeTokenRefresh((token:any) => {
+                      originalRequest.headers.Authorization = `Bearer ${token}`;
+                      resolve(Axios(originalRequest));
+                    });
+                });
+                if (!isRefreshing) {
+                    isRefreshing = true;
+                    GenerateRefreshToken(refreshToken)
+                    .then(async (res:any) => {
+                        isRefreshing = false;
+                        auth.key.token = res.data.token;
+                        auth.key.refreshToken = res.data.refresh_token;
+
+                        await Storage.SetItems(`${KEY_PREFIX}root`, JSON.stringify({
+                            ...globState,
+                            auth: JSON.stringify(auth),
+                        }));
+                        subscribers = [];
+                        onRrefreshed(res.data.token);
+                    });
+                }
+                return requestSubscribers;
             }
         }
-        throw error;
+        return Promise.reject(error);
     },
 };
+
+function subscribeTokenRefresh(cb:any) {
+    subscribers.push(cb);
+}
+
+function onRrefreshed(token:any) {
+    subscribers.map((cb) => cb(token));
+}
