@@ -1,4 +1,4 @@
-package com.mobile_keuangan;
+package com.reactnativeinit;
 
 import com.facebook.react.ReactActivity;
 
@@ -10,6 +10,6 @@ public class MainActivity extends ReactActivity {
    */
   @Override
   protected String getMainComponentName() {
-    return "mobile_keuangan";
+    return "reactnativeinit";
   }
 }
