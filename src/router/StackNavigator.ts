@@ -2,7 +2,7 @@
 import { RouterTypes } from './routerTypes';
 import { GenerateUID } from '../utils/random';
 // import all components here
-import { Login, Dashboard } from '../ui';
+import { Login, Dashboard } from '../ui/pages';
 
 const PublicRoutes:RouterTypes = [{
     id: GenerateUID(),
