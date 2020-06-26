@@ -17,7 +17,7 @@ import {
 } from '../../components/atoms';
 
 // import action creators
-import { SetEmail, SetPassword, LoginAsync } from '../../modules/redux/auth/auth.action';
+import { SetEmail, SetPassword, LoginAsync } from '../../../modules/redux/auth/auth.action';
 
 const Login = () => {
   const email = useSelector((state:any) => state.auth.user.email);

@@ -6,7 +6,7 @@ import { useDispatch } from 'react-redux';
 import { Button } from '../../components/atoms';
 
 // import reducer
-import { Logout } from '../../modules/redux/auth/auth.action';
+import { Logout } from '../../../modules/redux/auth/auth.action';
 import colors from '../../components/colors';
 
 const Dashboard = () => {
